@@ -29,6 +29,14 @@
     }
   ],
 
+  "r2_buckets": [
+    {
+      "binding": "AUDIO_BUCKET",
+      "bucket_name": "interview-audio",
+      "preview_bucket_name": "interview-audio-preview"
+    }
+  ],
+
   "durable_objects": {
     "bindings": [
       {
@@ -50,22 +58,24 @@
     {
       "tag": "v1",
       "new_sqlite_classes": [
-        "WebSocketServer", 
-        "CloudflareMcpAgent", 
+        "WebSocketServer",
+        "CloudflareMcpAgent",
         "OrchestratorDO"
       ]
     }
   ],
 
-    // --- SECRETS -- 
-    // API keys for AI SDK
-    //"GEMINI_API_KEY": "YOUR_GEMINI_API_KEY_HERE"
-    // "OPENAI_API_KEY": "YOUR_OPENAI_API_KEY_HERE"
-
+  // Environment variables (non-secret)
+  // For secrets, use `wrangler secret put <NAME>` or set in Cloudflare Dashboard
+  "vars": {
     // MCP Authentication Settings (optional)
-    // "MCP_AUTH_ENABLED": "false",
-    // "MCP_API_KEYS": "your-api-key-1,your-api-key-2",
-    // "CLOUDFLARE_ACCESS_TEAM_DOMAIN": "your-team.cloudflareaccess.com",
-    // "CLOUDFLARE_ACCESS_AUDIENCE": "your-audience-tag"
+    "MCP_AUTH_ENABLED": "false"
+  }
 
+  // --- SECRETS (set via wrangler secret put or .dev.vars for local dev) ---
+  // OPENAI_API_KEY - OpenAI API key for AI SDK
+  // GEMINI_API_KEY - Google Gemini API key (alternative)
+  // MCP_API_KEYS - Comma-separated API keys for MCP authentication
+  // CLOUDFLARE_ACCESS_TEAM_DOMAIN - Cloudflare Access team domain
+  // CLOUDFLARE_ACCESS_AUDIENCE - Cloudflare Access audience tag
 }
