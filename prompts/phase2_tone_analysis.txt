@@ -1,0 +1,11 @@
+PHASE 2 — TONE & PROSODY
+Goal: extract pace, pitch variance, silence %, filler words.
+
+Implement:
+- Audio metrics extraction using AudioContext offline analysis (client) or DSP approximations (server).
+- Store metrics in D1: volume_avg, pitch_var, speed_wpm, filler_count.
+- Combine metrics with GPT evaluation.
+
+Modify:
+- worker/db/schema.ts (add audio_metrics table)
+- worker/modules/ai/prompts.ts (add tone scoring request)

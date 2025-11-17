@@ -1,0 +1,7 @@
+PHASE 3 — VECTOR MEMORY
+Goal: vectorize transcripts + coaching notes; enable long-term learning.
+
+Implement:
+- Create Vectorize index: transcripts, analysis_json, question_text.
+- Add embedding call via Workers AI text-embedding
+- Add /improvement-areas endpoint using similarity search.

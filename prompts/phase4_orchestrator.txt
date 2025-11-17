@@ -1,0 +1,7 @@
+PHASE 4 — ORCHESTRATOR WORKER
+Goal: job-hunt pipeline automation using Cloudflare Agent (Tasks model).
+
+Implement:
+- New worker module orchestrating: JD parse → resume tailoring → interview prep → mock sessions.
+- Durable Object to store orchestrator state.
+- /pipeline/start, /pipeline/status endpoints.

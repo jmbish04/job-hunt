@@ -1,0 +1,14 @@
+PHASE 1 — ASYNC INTERVIEW LOOP
+Goal: implement session → question → audio upload → transcription → analysis pipeline.
+
+Implement:
+- POST /session/start (create session in D1)
+- GET /session/:id/next-question (OpenAI Responses API)
+- POST /session/:id/answer (R2 audio, Workers AI Whisper)
+- POST /analysis/:answerId (OpenAI evaluation)
+- GET /session/:id/results
+
+Files modified:
+- worker/modules/ai/prompts.ts with interview prompts
+- worker/modules/chat/ index.ts replaced with interview handlers
+- worker/db/schema.ts extended for sessions/questions/answers/analysis.

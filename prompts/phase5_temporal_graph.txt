@@ -1,0 +1,7 @@
+PHASE 5 — TEMPORAL GRAPH
+Goal: store relationships between session → question → answer → analysis over time.
+
+Implement:
+- Graph schema (nodes: session, question, answer, competency; edges typed)
+- Build ingestion script reading from D1
+- Expose /graph/query for strengths-over-time, competency trajectory.

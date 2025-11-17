@@ -1,0 +1,7 @@
+PHASE 6 — REALTIME OPTIONAL
+Goal: optionally add RTC/WebSocket adaptive coaching.
+
+Implement:
+- WebRTC recording stream to Worker RTM endpoint
+- GPT realtime coaching trigger via WebSocket events
+- Partial feedback injection in near-real-time

@@ -1,0 +1,13 @@
+PHASE 0 — FOUNDATION
+Goal: scaffold Cloudflare Worker project, Bun, wrangler.jsonc, env bindings, file structure matching job-hunt template.
+
+Requirements:
+- Worker entry in worker/index.ts
+- Modules: ai/, health/, chat/, mcp/
+- D1 + R2 binding config only; no logic yet.
+- Public index.html served through worker.
+
+Deliverables:
+- wrangler.jsonc configured with OPENAI_API_KEY var
+- worker/utils/openapi.ts initialized
+- Empty schema.ts + client.ts under worker/db/.
