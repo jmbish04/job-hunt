@@ -1,0 +1,390 @@
+Here is the master implementation prompt you can give to Codex, your custom GPT, or any code-generation agent to build the entire job-hunt system you described — including the new resume features, JD features, and the existing interview modules.
+
+This is written in the same style as your Gold Standard Worker project conventions, and it is safe for direct execution by an agent.
+
+⸻
+
+✅ MASTER IMPLEMENTATION PROMPT — Full Job-Hunt Platform
+
+SYSTEM INSTRUCTION FOR AGENT:
+
+You are updating a Cloudflare Workers / Vite SPA monorepo following the Gold Standard Worker Template.
+The repository is named jh-api (or whichever workspace you’re in).
+
+You must implement ALL backend + frontend functionality described.
+Follow all architectural rules in AGENTS.md.
+
+⸻
+
+🧩 PRIMARY GOAL
+
+Implement the complete job-hunt platform, including:
+
+(A) Resume Ingestion + Tailoring
+
+(B) Job Description Analysis
+
+(C) Cover Letter Generation
+
+(D) Skill Gap Engine
+
+(E) Mock Interview System (Phase 0–2)
+
+(F) Persistence + D1 Schema
+
+(G) R2 Storage for Documents & Audio
+
+(H) Vectorize (embeddings)
+
+(I) SPA Frontend Pages (React + shadcn)
+
+(J) OpenAPI docs + Type-safe client
+
+(K) Playwright tests
+
+This prompt describes everything you must build.
+
+⸻
+
+=====================================
+
+📁 PROJECT STRUCTURE (MANDATORY)
+
+=====================================
+
+/src/pages
+   mock-interview.tsx
+   interview-history.tsx
+   analysis.tsx
+   job-tailor.tsx
+   cover-letter.tsx
+   resume-upload.tsx
+   job-history.tsx
+
+/worker
+   index.ts
+   db/
+      client.ts
+      schema.ts
+   modules/
+      interview/
+         index.ts
+         service.ts
+         prompts.ts
+      resume/
+         index.ts
+         service.ts
+         prompts.ts
+      jobs/
+         index.ts
+         service.ts
+         prompts.ts
+      files/
+         r2.ts
+      vector/
+         index.ts
+      health/
+         index.ts
+         service.ts
+      mcp/
+         index.ts
+         agent.ts
+         middleware.ts
+      utils/
+         openapi.ts
+         audio.ts
+         id.ts
+
+/wrangler.jsonc
+/drizzle.config.ts
+/tests/*
+
+Follow the same conventions as the Gold Standard Worker repo in your workspace.
+
+⸻
+
+=====================================
+
+🗃️ D1 SCHEMA (MANDATORY)
+
+=====================================
+
+Modify worker/db/schema.ts to include:
+
+Resume tables
+
+resumes
+  id TEXT PK
+  filename TEXT
+  r2_key TEXT
+  content_text TEXT
+  parsed_json JSON
+  created_at INTEGER
+
+Job descriptions
+
+job_descriptions
+  id TEXT PK
+  company TEXT
+  role TEXT
+  jd_text TEXT
+  vectorize_id TEXT
+  created_at INTEGER
+
+Resume Tailoring
+
+resume_tailorings
+  id TEXT PK
+  jd_id TEXT FK
+  resume_id TEXT FK
+  tailored_bullets_json JSON
+  tailored_summary TEXT
+  skills_match_report JSON
+  created_at INTEGER
+
+Cover letters
+
+cover_letters
+  id TEXT PK
+  jd_id TEXT FK
+  resume_id TEXT FK
+  cover_letter_text TEXT
+  created_at INTEGER
+
+Interview tables (existing)
+
+sessions, questions, answers, analysis, audio_metrics.
+
+Provide relations() for ALL tables.
+
+⸻
+
+=====================================
+
+🧠 MODULE DEFINITIONS
+
+=====================================
+
+1. Resume Module
+
+Directory: worker/modules/resume/
+
+Endpoints
+
+POST /api/resume/ingest
+POST /api/resume/tailor
+POST /api/resume/cover-letter
+GET  /api/resume/skills-gap/:sessionId
+
+In service.ts implement:
+	•	R2 upload of PDF/docx
+	•	Extract text using Workers AI (text-embedding or document-parsing)
+	•	Store parsed text + JSON summary in D1
+	•	Build OpenAI Response prompts to:
+	•	Extract achievements
+	•	Rewrite bullets
+	•	Generate a role-specific summary
+	•	Quantify impact
+	•	Produce job-aligned bullet alternatives
+
+In prompts.ts implement:
+	•	buildResumeTailoringPrompt()
+	•	buildCoverLetterPrompt()
+	•	buildSkillsGapPrompt()
+
+⸻
+
+2. Job Description Module
+
+Directory: worker/modules/jobs/
+
+Endpoints
+
+POST /api/jobs/analyze
+POST /api/jobs/vectorize
+
+Functionality:
+	•	Parse JD into structured JSON:
+	•	requirements
+	•	preferred
+	•	responsibilities
+	•	competencies
+	•	Generate a “JD Summary Card”
+	•	Generate comparison with user resume
+	•	Compute estimated interview readiness %
+	•	Store JD into D1 + embed with Vectorize
+
+⸻
+
+3. Interview Module (Phase 0–2)
+
+Already scaffolded in your project but if missing:
+
+Endpoints:
+
+POST /api/interview/session/start
+GET  /api/interview/session/:id/next-question
+POST /api/interview/session/:id/answer
+POST /api/interview/analysis
+GET  /api/interview/sessions
+GET  /api/interview/session/:id/results
+
+Tools:
+	•	Workers AI Whisper transcription
+	•	OpenAI Responses for:
+	•	Question generation
+	•	Answer analysis
+	•	STAR scoring
+	•	Coaching notes
+
+⸻
+
+4. Vector Module
+
+Directory: worker/modules/vector/
+
+Implement:
+	•	Embedding generation (Workers AI)
+	•	Insert embeddings into Vectorize
+	•	Query for similarity
+	•	Provide retrieveSimilarAnswers() and retrieveSimilarJDSections()
+
+⸻
+
+5. Files / R2 Module
+
+Directory: worker/modules/files/r2.ts
+
+Implement:
+	•	uploadResume()
+	•	uploadAudio()
+	•	downloadResume()
+	•	Signed URLs (if needed)
+
+⸻
+
+6. OpenAPI
+
+Generate routes using:
+	•	createRoute + .openapi()
+	•	worker/utils/openapi.ts
+
+Expose spec at:
+
+GET /api/openapi
+
+
+⸻
+
+7. Health Module
+
+Extend your existing health checks to include:
+	•	R2 availability
+	•	D1 migrations check
+	•	Workers AI availability
+	•	Vectorize index existence
+	•	OpenAI connectivity test
+
+⸻
+
+=====================================
+
+🎨 FRONTEND PAGES (MANDATORY)
+
+=====================================
+
+In /src/pages create:
+
+resume-upload.tsx
+
+Upload → preview → parse → save.
+
+job-tailor.tsx
+	•	Paste JD
+	•	Choose resume
+	•	Button: “Analyze Fit”
+	•	Show:
+	•	JD summary
+	•	skills match %
+	•	missing skills
+	•	new bullets
+	•	tailored summary
+
+cover-letter.tsx
+	•	Pick JD + resume
+	•	Render generated letter
+	•	Alternate tones (dropdown)
+	•	Export to PDF/MD
+
+job-history.tsx
+	•	List all JDs analyzed
+	•	List all tailored resumes generated
+	•	Download bundles
+
+Use shadcn/ui components only.
+
+⸻
+
+=====================================
+
+🧪 TESTING REQUIREMENTS
+
+=====================================
+
+Create or expand:
+
+tests/interview.spec.ts
+tests/resume.spec.ts
+tests/jobs.spec.ts
+tests/history.spec.ts
+
+Follow patterns in:
+	•	tests/AGENTS.md
+	•	docs/testing-instructions.md
+
+Each endpoint must have:
+	•	Navigation tests
+	•	API tests
+	•	Error state tests
+	•	Mocked data tests
+
+⸻
+
+=====================================
+
+🔥 AGENT EXECUTION INSTRUCTIONS
+
+=====================================
+
+You must now implement everything above.
+	•	Follow Golden Rules
+	•	Respect file boundaries
+	•	Never write raw SQL
+	•	Always create Zod schemas
+	•	Every endpoint must be .openapi()
+	•	Every module must have its own directory
+	•	Never import frontend code from backend or vice versa
+	•	Use only shadcn/ui components in the frontend
+	•	Deliver fully-working code with types
+
+When ready, generate:
+	•	All new files
+	•	All modified files
+	•	A migration diff
+	•	Instructions for updating wrangler.jsonc
+	•	A summary of system changes
+
+This completes the full job-hunt system foundation.
+
+⸻
+
+If you want, I can also generate:
+
+📦 A full ZIP for this entire build
+🧪 Playwright test scaffolds
+🌐 OpenAPI JSON + YAML schemata
+🔐 Secrets bindings block for wrangler.jsonc
+
+Just tell me:
+
+👉 “Generate the ZIP”
