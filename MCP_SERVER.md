@@ -558,4 +558,171 @@ Contributions are welcome! Please:
 
 ---
 
+# MCP_SERVER.md
+## Model Context Protocol Server Design for Job-Hunt
+
+This document describes how the **job-hunt** Cloudflare Worker exposes an MCP-compatible interface so external clients (e.g., custom GPTs) can:
+
+- Start job-hunt pipelines
+- Manage interview sessions
+- Retrieve questions & analysis
+- Inspect system health
+- Trigger orchestrated workflows
+
+---
+
+## 1. MCP Server Location
+
+MCP integration lives under:
+
+- `worker/modules/mcp/index.ts`
+- `worker/modules/mcp/agent.ts`
+- `worker/modules/mcp/middleware.ts`
+
+The MCP server wraps the existing Worker router and exposes **tools** that map to Worker endpoints.
+
+---
+
+## 2. Core MCP Tools
+
+### `job_hunt.start_pipeline`
+
+Start a new job-hunt pipeline for a specific job posting.
+
+**Inputs**
+
+- `job_title`: string  
+- `company`: string  
+- `job_description`: string (full JD text)  
+
+**Behavior**
+
+- Calls into Orchestrator Agent
+- Creates a new pipeline record (Durable Object + D1 row)
+- Returns pipeline id + initial recommended next steps
+
+---
+
+### `job_hunt.get_pipeline_status`
+
+Get the current status of a pipeline.
+
+**Inputs**
+
+- `pipeline_id`: string
+
+**Response**
+
+- `status`: string (pending / in_progress / blocked / complete)
+- `current_phase`: string
+- `next_actions`: string[]
+- `recent_events`: object[]
+
+---
+
+### `interview.create_session`
+
+Create a new interview prep session for a given job / pipeline.
+
+**Inputs**
+
+- `pipeline_id` (optional)
+- `job_title`
+- `company`
+- `job_description` (if not linked via pipeline)
+
+**Implementation**
+
+- Directly calls the session start route:
+  - `POST /api/interview/session/start`
+- Returns:
+  - `session_id`
+
+---
+
+### `interview.next_question`
+
+Get the next mock interview question for a session.
+
+**Inputs**
+
+- `session_id`: string
+
+**Implementation**
+
+- Calls:
+  - `GET /api/interview/session/:id/next-question`
+- Returns:
+  - `question_id`
+  - `question`
+  - `scorecard`
+
+---
+
+### `interview.submit_transcript`
+
+Submit a transcript-only answer (for text-mode testing).
+
+**Inputs**
+
+- `session_id`
+- `question_id`
+- `transcript`
+
+**Behavior**
+
+- Bypasses audio upload
+- Directly:
+  - Creates answer row
+  - Runs evaluation agent
+- Returns answer + analysis object
+
+---
+
+### `interview.get_results`
+
+Fetch all Q&A + analysis results for a session.
+
+**Inputs**
+
+- `session_id`
+
+**Implementation**
+
+- Calls:
+  - `GET /api/interview/session/:id/results`
+- Returns:
+  - session
+  - items: [{ question, answer, analysis }]
+
+---
+
+### `system.health`
+
+Simple health / readiness check for MCP clients.
+
+- Calls: `GET /api/health`
+- Returns `ok: true` if the worker, D1, and env bindings are in a usable state.
+
+---
+
+## 3. MCP Middleware
+
+`worker/modules/mcp/middleware.ts` should:
+
+- Take MCP tool invocations
+- Map them to appropriate Worker routes
+- Normalize error output
+
+This keeps the HTTP API and MCP tools **aligned**, with a single source of truth.
+
+---
+
+## 4. Security Considerations
+
+- MCP tools should **not** expose raw secrets or internal config.
+- Limit which internal routes are accessible through MCP.
+- MCP tools should work on the principle of:
+  - “User can only operate on their own pipelines and sessions.”
+
 **Built with ❤️ using Cloudflare Workers and the Model Context Protocol**
