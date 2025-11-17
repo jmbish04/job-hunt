@@ -6,6 +6,8 @@ import { productsApi } from '@api/modules/dummyjson'
 import { createOpenApiSpec } from '@api/utils/openapi'
 import { WebSocketServer } from '@api/do/websocket'
 import { mcpAgent } from '@api/modules/mcp'
+import { startPipeline, getPipelineStatus } from "./modules/orchestrator/index";
+import { OrchestratorDO } from "./do/orchestrator";
 
 /**
  * Environment bindings for the Cloudflare Worker
@@ -30,6 +32,7 @@ type Env = {
   MCP_API_KEYS?: string // Comma-separated list of valid API keys
   CLOUDFLARE_ACCESS_TEAM_DOMAIN?: string
   CLOUDFLARE_ACCESS_AUDIENCE?: string
+  ORCHESTRATOR: DurableObjectNamespace
 }
 
 /**
@@ -67,6 +70,24 @@ app.get('/api/ws', async (c) => {
  * Access at: /api/openapi.json
  */
 app.doc('/api/openapi.json', createOpenApiSpec(app))
+
+app.post("/api/pipeline/start", async (c) => {
+  const env = c.env;
+  const id = env.ORCHESTRATOR.idFromName("global-orchestrator");
+  const stub = env.ORCHESTRATOR.get(id);
+  const body = await c.req.json();
+  const result = await startPipeline(env, stub, body);
+  return c.json(result);
+});
+
+app.get("/api/pipeline/status/:id", async (c) => {
+  const env = c.env;
+  const pipelineId = c.req.param("id");
+  const id = env.ORCHESTRATOR.idFromName("global-orchestrator");
+  const stub = env.ORCHESTRATOR.get(id);
+  const result = await getPipelineStatus(stub, pipelineId);
+  return c.json(result);
+});
 
 /**
  * Main Worker fetch handler
