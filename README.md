@@ -211,3 +211,25 @@ The test suite includes:
 ## Development Guidelines
 
 See [AGENTS.md](./AGENTS.md) for AI agent governance rules and development patterns.
+
+
+```mermaid
+flowchart TD
+    subgraph JobHuntPipeline
+      A[Job Posting / JD] --> B[Orchestrator Agent]
+      B --> C[Interview Session]
+      C --> D[Interview Question Agent]
+      D --> E[User Answer (Audio)]
+      E --> F[Whisper Transcription]
+      F --> G[Interview Evaluation Agent]
+      F --> H[Tone & Delivery Agent]
+      G --> I[D1 Storage]
+      H --> I
+      I --> J[Vector Memory Agent]
+      J --> K[Temporal Graph Agent]
+      J --> D
+    end
+
+    B --> L[Resume Tailoring (future)]
+    B --> M[Company Research (future)]
+```
